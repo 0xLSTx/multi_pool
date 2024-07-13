@@ -1,5 +1,17 @@
 [
     {
+        "ticker": "stAPT1",
+        "symbol": "stAPT1",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/TortugaStakedAptos.png",
+        "name": "Pre Staked APT 1"
+    },
+    {
+        "ticker": "stAPT2",
+        "symbol": "stAPT2",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/stAPT.svg",
+        "name": "Pre Staked APT 2"
+    },
+    {
         "ticker": "tAPT",
         "symbol": "tAPT",
         "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/TortugaStakedAptos.png",

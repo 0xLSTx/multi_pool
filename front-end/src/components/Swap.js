@@ -49,12 +49,20 @@ function Swap(props) {
     setSlippage(e.target.value);
   }
 
-  function changeAmount(e) {
+  async function changeAmount(e) {
     setTokenOneAmount(e.target.value);
-    if(e.target.value && prices){
-      setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
-    }else{
-      setTokenTwoAmount(null);
+    const payload = {
+        function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
+        functionArguments: [account.address, tokenOne.name, tokenOne.symbol, e.target.value, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+    };
+
+    try {
+      const result = (await aptos.view({ payload })); 
+      setTokenTwoAmount(result[0]);
+    }
+    catch (error) {
+      console.log(error);
+      return;
     }
   }
   function switchTokens() {

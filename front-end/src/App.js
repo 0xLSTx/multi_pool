@@ -11,7 +11,7 @@ import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 
 import { Aptos } from "@aptos-labs/ts-sdk";
 export const aptos = new Aptos();
-export const moduleAddress = "0x98027a4455e28781b48eb8ce0730d974f38ad5185bc3073ed2b56176f819d48f";
+export const moduleAddress = "0xb2517531510ce600ca5abea3ae78efd4d3086293e42fa900937cd863228e32a5";
 
 
 function App() {
