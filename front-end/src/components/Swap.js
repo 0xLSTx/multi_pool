@@ -109,21 +109,27 @@ function Swap(props) {
     if (!account) return;
     setTransactionInProgress(true);
 
-    const get_amount_transaction = {
-      data: {
-        function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-        functionArguments: [account.address, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
-      }
+    const payload = {
+      function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
+      functionArguments: [account.address, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
-
-    const [amount_out, spot_price_after] = await aptos.view({get_amount_transaction});
+    let result;
+    try {
+      result = (await aptos.view({ payload })); 
+    }
+    catch (error) {
+      console.log(error);
+      return;
+    }
 
     const swap_transaction = {
       data: {
         function: `${moduleAddress}::Multi_Token_Pool::swap`,
-        functionArguments: [tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, amount_out]
+        functionArguments: [tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, result[0]]
       }
     };
+    console.log(tokenTwo.name);
+    console.log(tokenTwo.symbol);
 
     // sign and submit transaction to chain
     const response = await signAndSubmitTransaction(swap_transaction);
@@ -279,7 +285,7 @@ function Swap(props) {
             <DownOutlined />
           </div>
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
+        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={swap}>Swap</div>
       </div>
     </>
   );
