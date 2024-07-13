@@ -1,0 +1,32 @@
+[
+    {
+        "ticker": "tAPT",
+        "symbol": "tAPT",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/TortugaStakedAptos.png",
+        "name": "Tortuga Staked Aptos"
+    },
+    {
+        "ticker": "stAPT",
+        "symbol": "stAPT",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/DittoStakedAptos.svg",
+        "name": "Ditto Staked Aptos"
+    },
+    {
+        "ticker": "thAPT",
+        "symbol": "thAPT",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/thAPT.svg",
+        "name": "Thala APT"
+    },
+    {
+        "ticker": "sthAPT",
+        "symbol": "sthAPT",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/thAPT.svg",
+        "name": "Staked Thala APT"
+    },
+    {
+        "ticker": "stAPT",
+        "symbol": "stAPT",
+        "img": "https://raw.githubusercontent.com/hippospace/aptos-coin-list/main/icons/stAPT.svg",
+        "name": "Staked Aptos Coin"
+    }
+]
