@@ -286,6 +286,28 @@ module pool_addr::Multi_Token_Pool {
     // ========================================= View Function ==========================================
 
     #[view]
+    public fun get_pool_info(): (u64, u64, bool) acquires PoolInfo {
+        let pool_info = borrow_global<PoolInfo>(@pool_addr);
+        (pool_info.total_weight, pool_info.swap_fee, pool_info.is_finalized)
+    }
+
+    #[view]
+    public fun get_token_record(index: u64): (bool, u64, u64, u64, String, String) acquires TokenRecord, TokenList {
+        let token_record = borrow_global<TokenRecord>(@pool_addr);
+        let token_list = borrow_global<TokenList>(@pool_addr);
+        let token_address = vector::borrow(&token_list.token_list, index);
+        let record = simple_map::borrow<address, Record>(&token_record.records, token_address);
+        (
+            record.bound,
+            record.index, 
+            record.denorm,
+            record.balance,
+            record.name, 
+            record.symbol,
+        )
+    }
+
+    #[view]
     public fun get_total_denormalized_weight(): u64 acquires PoolInfo {
         let pool_info = borrow_global<PoolInfo>(@pool_addr);
         pool_info.total_weight
@@ -500,7 +522,7 @@ module pool_addr::Multi_Token_Pool {
     ): u64 acquires TokenList, TokenRecord, PoolInfo {
         let token_record = borrow_global_mut<TokenRecord>(@pool_addr);
         let token_list = borrow_global_mut<TokenList>(@pool_addr);
-        let pool_info = borrow_global<PoolInfo>(sender_addr);
+        let pool_info = borrow_global<PoolInfo>(@pool_addr);
         let token_in_address = Liquid_Staking_Token::get_fa_obj_address(token_in_name, token_in_symbol);
         let record_token_in = simple_map::borrow_mut<address, Record>(&mut token_record.records, &token_in_address);
         let total_supply_lpt = get_total_supply_lpt();
