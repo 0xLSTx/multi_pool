@@ -20,12 +20,16 @@ function Pools(){
             assets: [
                 {
                     asset: tokenList[0],
-                    weight: 50,
+                    weight: 20,
                 },
                 {
                     asset: tokenList[1],
-                    weight: 50,
+                    weight: 40,
                 },
+                {
+                    asset: tokenList[2],
+                    weight: 40
+                }
             ],
         },
         {
@@ -72,6 +76,10 @@ function Pools(){
     function openWithdraw(pool){
         setPool(pool);
         setIsOpenWithdraw(true);
+    }
+
+    async function addLiquidity() {
+        
     }
 
     return (
