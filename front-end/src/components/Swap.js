@@ -51,14 +51,17 @@ function Swap(props) {
 
   async function changeAmount(e) {
     setTokenOneAmount(e.target.value);
+
     const payload = {
         function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-        functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, e.target.value, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+        functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, (Number(e.target.value) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
 
     try {
       const result = (await aptos.view({ payload })); 
-      setTokenTwoAmount(result[0]);
+    
+
+      setTokenTwoAmount(Number(result[0]) / 1000000);
     }
     catch (error) {
       console.log(error);
@@ -108,10 +111,11 @@ function Swap(props) {
   async function swap() {
     if (!account) return;
     setTransactionInProgress(true);
+    // parse tokenOneAmount to multiply 10^6
 
     const payload = {
       function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-      functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+      functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, (Number(tokenOneAmount) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
     let result;
     try {
@@ -125,7 +129,7 @@ function Swap(props) {
     const swap_transaction = {
       data: {
         function: `${moduleAddress}::Multi_Token_Pool::swap`,
-        functionArguments: [0, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, result[0]]
+        functionArguments: [0, tokenOne.name, tokenOne.symbol, (Number(tokenOneAmount) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, result[0]]
       }
     };
     console.log(tokenTwo.name);
