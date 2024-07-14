@@ -53,7 +53,7 @@ function Swap(props) {
     setTokenOneAmount(e.target.value);
     const payload = {
         function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-        functionArguments: [account.address, tokenOne.name, tokenOne.symbol, e.target.value, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+        functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, e.target.value, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
 
     try {
@@ -111,7 +111,7 @@ function Swap(props) {
 
     const payload = {
       function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-      functionArguments: [account.address, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+      functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
     let result;
     try {
@@ -125,7 +125,7 @@ function Swap(props) {
     const swap_transaction = {
       data: {
         function: `${moduleAddress}::Multi_Token_Pool::swap`,
-        functionArguments: [tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, result[0]]
+        functionArguments: [0, tokenOne.name, tokenOne.symbol, tokenOneAmount, tokenTwo.name, tokenTwo.symbol, result[0]]
       }
     };
     console.log(tokenTwo.name);
