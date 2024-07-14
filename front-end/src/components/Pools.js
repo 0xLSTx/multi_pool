@@ -12,21 +12,31 @@ import { Input, Popover, Radio, Modal, message } from "antd";
 import tokenList from "../tokenList.json";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-labs/wallet-adapter-react";
+import { aptos } from "../App.js";
+import { moduleAddress } from "../App.js";
+import { Account } from "@aptos-labs/ts-sdk";
 
 
 function Pools(){
+    const { account, signAndSubmitTransaction } = useWallet();
     const pools = [
         {
             assets: [
                 {
                     asset: tokenList[0],
-                    weight: 50,
+                    weight: 20,
                 },
                 {
                     asset: tokenList[1],
-                    weight: 50,
+                    weight: 40,
                 },
+                {
+                    asset: tokenList[2],
+                    weight: 40
+                }
             ],
+            pool_id: 0
         },
         {
             assets: [
@@ -43,6 +53,7 @@ function Pools(){
                     weight: 20,
                 },
             ],
+            pool_id: 1
         },
         {
             assets: [
@@ -55,6 +66,7 @@ function Pools(){
                     weight: 60,
                 },
             ],
+            pool_id: 2
         }
     ];
     console.log(pools);
@@ -62,6 +74,7 @@ function Pools(){
     const [pool, setPool] = useState(pools[0]);
     const [isOpenDeposit, setIsOpenDeposit] = useState(false);
     const [isOpenWithdraw, setIsOpenWithdraw] = useState(false);
+    const [assetAmount, setAssetAmount] = useState([0, 0, 0]);
 
     function openDeposit(pool){
         console.log(pool);
@@ -72,6 +85,73 @@ function Pools(){
     function openWithdraw(pool){
         setPool(pool);
         setIsOpenWithdraw(true);
+    }
+
+    async function changeAmount(event, index) {
+        console.log(index, event.target.value);
+        var _assetAmount = structuredClone(assetAmount);
+        _assetAmount[index] = parseFloat(event.target.value);
+        console.log(typeof event.target.value);
+        if(_assetAmount[index] != _assetAmount[index]){
+            _assetAmount[index] = null;
+        }
+        
+        if(_assetAmount[index] == null){
+            setAssetAmount(assetAmount.map(() => null));
+        }else{
+            const payload = {  
+                function: `${moduleAddress}::Multi_Token_Pool::get_token_amount_in_list`,
+                functionArguments: [pool.pool_id, event.target.value, pool.assets[0].asset.name, pool.assets[0].asset.symbol]
+                
+            }
+            try {
+                const result = (await aptos.view({ payload }))[0]; 
+                console.log("Result is: ", result);
+                for (var i = 0; i < pool.assets.length; i++) {
+                    console.log(i, result[i]);
+                    if (i === index) continue;
+                    _assetAmount[i] = parseFloat(result[i]);
+                }
+                setAssetAmount(_assetAmount);
+              }
+              catch (error) {
+                console.log(error);
+                return;
+              }
+
+        }
+    }
+
+    async function addLiquidity() {
+        const payload = {  
+            function: `${moduleAddress}::Multi_Token_Pool::get_pool_amount_out`,
+            functionArguments: [Number(pool.pool_id), Number(assetAmount[0]), pool.assets[0].asset.name, pool.assets[0].asset.symbol]
+            
+        }
+  
+        let result;
+        try {
+            result = (await aptos.view({ payload }))[0]; 
+            console.log(result);
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+
+        const join_pool_payload = {
+            data: {
+                function: `${moduleAddress}::Multi_Token_Pool::join_pool`,
+                functionArguments: [pool.pool_id, result, assetAmount.map((amount) => Number(1000000000000))]
+            }
+        }
+
+        try {
+            const response = await signAndSubmitTransaction(join_pool_payload);
+        }
+        catch (error) {
+            console.log(error);
+            return;
+        }
     }
 
     return (
@@ -88,6 +168,8 @@ function Pools(){
                             <Input
                                 className="depositInput"
                                 placeholder="0"
+                                onChange={(event) => changeAmount(event, index)}
+                                value={assetAmount[index]}
                             />
                             <div className="depositAsset">
                                 <img src={asset.asset.img} alt="assetOneLogo" className="assetLogo" />
@@ -96,7 +178,7 @@ function Pools(){
                         </div>
                     ))}
                     <div style={{width: "90%", margin: "0 auto"}}>
-                        <div className="swapButton" style={{marginBottom: 0}}>Add liquidity</div>
+                        <div className="swapButton" style={{marginBottom: 0}} onClick={addLiquidity}>Add liquidity</div>
                     </div>
                 </div>
                 

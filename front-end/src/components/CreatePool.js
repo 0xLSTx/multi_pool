@@ -12,6 +12,10 @@ import { Input, Popover, Radio, Modal, message } from "antd";
 import tokenList from "../tokenList.json";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CloseIcon from '@mui/icons-material/Close';
+import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-labs/wallet-adapter-react";
+import { aptos } from "../App.js";
+import { moduleAddress } from "../App.js";
+import { Account } from "@aptos-labs/ts-sdk";
 
 
 function createData(name, calories, fat, carbs, protein) {
@@ -34,6 +38,7 @@ function CreatePool() {
     const [assetPrice, setAssetPrice] = useState([1, 1]);
     const [isOpen, setIsOpen] = useState(false);
     const [modalAsset, setModalAsset] = useState(0);
+    const { account, signAndSubmitTransaction } = useWallet();
 
     const addAsset = (newAsset) => {
         setAssets([...assets, newAsset]);
@@ -134,6 +139,66 @@ function CreatePool() {
 
         if(result != result) return 0;
         return (result * 100).toFixed(2);
+    }
+
+    async function createPool() {
+        const pool_account = Account.generate();
+        console.log(pool_account.accountAddress.toString());
+        
+        const create_pool_payload = {
+            data: {
+                function: `${moduleAddress}::Multi_Token_Pool::create_pool`,
+                functionArguments: [pool_account.accountAddress.toString(), 0]
+            }
+        };
+
+
+        
+        try {
+            const response = await signAndSubmitTransaction(create_pool_payload);
+            await aptos.waitForTransaction({transactionHash:response.hash});
+        } catch(error){
+            console.log(error);
+            return;
+        }
+        console.log("============CREATE POOL SUCCESS============");
+
+        for(let i = 0; i < assets.length; i++){
+            const bind_payload = {
+                data: {
+                    function: `${moduleAddress}::Multi_Token_Pool::bind`,
+                    functionArguments: [2, assetAmount[i], assetWeights[i], assets[i].name, assets[i].symbol]
+                }
+            };
+
+            console.log(`============BINDING ASSET: ${assets[i].name}============`);
+
+            try {
+                const response = await signAndSubmitTransaction(bind_payload);
+                await aptos.waitForTransaction({transactionHash:response.hash});
+            } catch(error){
+                console.log(error);
+                return;
+            }
+            console.log(`============BINDING ASSET: ${assets[i].name}============`);
+        }
+
+        const finalize_payload = {
+            data: {
+                function: `${moduleAddress}::Multi_Token_Pool::finalize`,
+                functionArguments: [2]
+            }
+        };
+
+        try {
+            const response = await signAndSubmitTransaction(finalize_payload);
+            await aptos.waitForTransaction({transactionHash:response.hash});
+        } catch(error) {
+            console.log(error);
+            return;
+        }
+
+        console.log("============FINALIZE SUCCESS============");
     }
 
     return (
@@ -239,7 +304,7 @@ function CreatePool() {
                     </Table>
                     </TableContainer>
 
-                <div className="swapButton" >Create Pool</div>
+                <div className="swapButton" onClick={createPool}>Create Pool</div>
             </div>
         </div>
     )
