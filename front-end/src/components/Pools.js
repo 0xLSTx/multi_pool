@@ -31,15 +31,15 @@ function Pools(){
         {
             assets: [
                 {
-                    asset: tokenList[2],
+                    asset: tokenList[1],
                     weight: 60,
                 },
                 {
-                    asset: tokenList[3],
+                    asset: tokenList[2],
                     weight: 20,
                 },
                 {
-                    asset: tokenList[4],
+                    asset: tokenList[3],
                     weight: 20,
                 },
             ],
@@ -47,16 +47,17 @@ function Pools(){
         {
             assets: [
                 {
-                    asset: tokenList[5],
+                    asset: tokenList[1],
                     weight: 40,
                 },
                 {
-                    asset: tokenList[7],
+                    asset: tokenList[3],
                     weight: 60,
                 },
             ],
         }
     ];
+    console.log(pools);
 
     const [pool, setPool] = useState(pools[0]);
     const [isOpenDeposit, setIsOpenDeposit] = useState(false);
