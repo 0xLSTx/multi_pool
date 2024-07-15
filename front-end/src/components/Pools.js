@@ -14,9 +14,9 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-labs/wallet-adapter-react";
 import { aptos } from "../App.js";
-import { moduleAddress } from "../App.js";
-import { Account } from "@aptos-labs/ts-sdk";
 
+import { Account } from "@aptos-labs/ts-sdk";
+import {addLiquidity, getTokenAmountInList} from "../backend/Pools.js"
 
 function Pools(){
     const { account, signAndSubmitTransaction } = useWallet();
@@ -80,6 +80,7 @@ function Pools(){
         console.log(pool);
         setPool(pool);
         setIsOpenDeposit(true);   
+        setAssetAmount(pool.assets.map((asset) => 0));
     }
 
     function openWithdraw(pool){
@@ -99,60 +100,35 @@ function Pools(){
         if(_assetAmount[index] == null){
             setAssetAmount(assetAmount.map(() => null));
         }else{
-            const payload = {  
-                function: `${moduleAddress}::Multi_Token_Pool::get_token_amount_in_list`,
-                functionArguments: [pool.pool_id, event.target.value, pool.assets[0].asset.name, pool.assets[0].asset.symbol]
-                
-            }
-            try {
-                const result = (await aptos.view({ payload }))[0]; 
-                console.log("Result is: ", result);
+            try{
+                console.log("get ", parseFloat(event.target.value), pool);
+                const result = await getTokenAmountInList(parseFloat(event.target.value), pool);
+                console.log("Get done ", result);
                 for (var i = 0; i < pool.assets.length; i++) {
                     console.log(i, result[i]);
                     if (i === index) continue;
                     _assetAmount[i] = parseFloat(result[i]);
                 }
                 setAssetAmount(_assetAmount);
-              }
-              catch (error) {
+            }catch(error){
                 console.log(error);
                 return;
-              }
-
-        }
-    }
-
-    async function addLiquidity() {
-        const payload = {  
-            function: `${moduleAddress}::Multi_Token_Pool::get_pool_amount_out`,
-            functionArguments: [Number(pool.pool_id), Number(assetAmount[0]), pool.assets[0].asset.name, pool.assets[0].asset.symbol]
-            
-        }
-  
-        let result;
-        try {
-            result = (await aptos.view({ payload }))[0]; 
-            console.log(result);
-        } catch (error) {
-            console.log(error);
-            return;
-        }
-
-        const join_pool_payload = {
-            data: {
-                function: `${moduleAddress}::Multi_Token_Pool::join_pool`,
-                functionArguments: [pool.pool_id, result, assetAmount.map((amount) => Number(1000000000000))]
             }
-        }
+            
+            // try {
+                
+            //     console.log("Result is: ", result);
+                
+            //   }
+            //   catch (error) {
+            //     console.log(error);
+            //     return;
+            //   }
 
-        try {
-            const response = await signAndSubmitTransaction(join_pool_payload);
-        }
-        catch (error) {
-            console.log(error);
-            return;
         }
     }
+
+    
 
     return (
         <div>
@@ -178,7 +154,7 @@ function Pools(){
                         </div>
                     ))}
                     <div style={{width: "90%", margin: "0 auto"}}>
-                        <div className="swapButton" style={{marginBottom: 0}} onClick={addLiquidity}>Add liquidity</div>
+                        <div className="swapButton" style={{marginBottom: 0}} onClick={() => addLiquidity(pool, assetAmount, signAndSubmitTransaction)}>Add liquidity</div>
                     </div>
                 </div>
                 
