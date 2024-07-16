@@ -4,6 +4,7 @@ import { moduleAddress } from "../App.js";
 import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-labs/wallet-adapter-react";
 import { Account } from "@aptos-labs/ts-sdk";
 import { responsiveFontSizes } from "@mui/material";
+import tokenList from "../tokenList.json";
 
 
 
@@ -61,6 +62,82 @@ export async function getTokenAmountInList(value, pool){
     }
 }
 
+export async function getPools() {
+    let payload = {
+        function: `${moduleAddress}::Multi_Token_Pool::get_num_pools`,
+        functionArguments: []      
+    };
+
+    let num_pools;
+
+    try {
+        num_pools = (await aptos.view({ payload }))[0]; 
+        console.log(num_pools);
+    } catch(error) {
+        console.log(error);
+        return;
+    }
+
+    console.log("Number of pools is: ", num_pools);
+
+    let pools = [];
+
+    // create mapping
+    let list_token_m = {};
+    list_token_m["Tortuga Staked Aptos"] = 0;
+    list_token_m["Ditto Staked Aptos"] = 1;
+    list_token_m["Thala APT"] = 2;
+    list_token_m["Staked Thala APT"] = 3;
+    list_token_m["Staked Aptos Coin"] = 4;
+
+
+    for (let i = 1; i < num_pools; i++) {
+        payload = {
+            function: `${moduleAddress}::Multi_Token_Pool::get_token_name_list`,
+            functionArguments: [i]
+        }
+
+        let list_token;
+        let list_weight;
+
+        try {
+            const response = await aptos.view({ payload });
+            list_token = response[0];
+
+        } catch(error) {
+            console.log(error);
+            return;
+        }
+
+        console.log("List tokne", list_token);
+
+        payload = {
+            function: `${moduleAddress}::Multi_Token_Pool::get_token_weight_list`,
+            functionArguments: [i]
+        }
+
+        try {
+            const response = await aptos.view({ payload });
+            list_weight = response[0];
+
+        } catch(error) {
+            console.log(error);
+            return;
+        }
+
+        const assets = [];
+        for (let j = 0; j < list_token.length; j++) {
+            assets.push({
+                asset: tokenList[list_token_m[list_token[j]]],
+                weight: Number(list_weight[j]) / 10000
+            });
+        }
+        pools.push({assets, pool_id: i});
+    }
+
+    return pools;
+}
+
 function addDecimal(value, decimal){
     return value * Math.pow(10, decimal);
 }
@@ -69,7 +146,6 @@ export async function createPool(assets, assetAmount, assetWeights, signAndSubmi
     const pool_account = Account.generate();
     console.log(pool_account.accountAddress.toString());
 
-    // check pool_id
 
     const payload = {  
         function: `${moduleAddress}::Multi_Token_Pool::get_num_pools`,

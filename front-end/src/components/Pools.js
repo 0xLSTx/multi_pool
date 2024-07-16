@@ -16,80 +16,97 @@ import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-l
 import { aptos } from "../App.js";
 
 import { Account } from "@aptos-labs/ts-sdk";
-import {addLiquidity, getTokenAmountInList} from "../backend/Pools.js"
+import {addLiquidity, getTokenAmountInList, getPools} from "../backend/Pools.js"
+import { useEffect } from "react";
 
 function Pools(){
     const { account, signAndSubmitTransaction } = useWallet();
-    const pools = [
-        {
-            assets: [
-                {
-                    asset: tokenList[3],
-                    weight: 20,
-                },
-                {
-                    asset: tokenList[4],
-                    weight: 40,
-                },
-                {
-                    asset: tokenList[5],
-                    weight: 40
-                }
-            ],
-            pool_id: 0
-        },
-        {
-            assets: [
-                {
-                    asset: tokenList[3],
-                    weight: 60,
-                },
-                {
-                    asset: tokenList[5],
-                    weight: 20,
-                },
-                {
-                    asset: tokenList[7],
-                    weight: 20,
-                },
-            ],
-            pool_id: 1
-        },
-        {
-            assets: [
-                {
-                    asset: tokenList[3],
-                    weight: 40,
-                },
-                {
-                    asset: tokenList[4],
-                    weight: 60,
-                },
-            ],
-            pool_id: 2
-        },
-        {
-            assets: [
-                {
-                    asset: tokenList[3],
-                    weight: 10
-                },
-                {
-                    asset: tokenList[4],
-                    weight: 20
-                },
-                {
-                    asset: tokenList[5],
-                    weight: 30
-                },
-                {
-                    asset: tokenList[6],
-                    weight: 40
-                },
-            ],
-            pool_id: 3
-        }
-    ];
+    // const pools = [
+    //     {
+    //         assets: [
+    //             {
+    //                 asset: tokenList[0],
+    //                 weight: 20,
+    //             },
+    //             {
+    //                 asset: tokenList[1],
+    //                 weight: 40,
+    //             },
+    //             {
+    //                 asset: tokenList[2],
+    //                 weight: 40
+    //             }
+    //         ],
+    //         pool_id: 0
+    //     },
+    //     {
+    //         assets: [
+    //             {
+    //                 asset: tokenList[0],
+    //                 weight: 60,
+    //             },
+    //             {
+    //                 asset: tokenList[2],
+    //                 weight: 20,
+    //             },
+    //             {
+    //                 asset: tokenList[4],
+    //                 weight: 20,
+    //             },
+    //         ],
+    //         pool_id: 1
+    //     },
+    //     {
+    //         assets: [
+    //             {
+    //                 asset: tokenList[0],
+    //                 weight: 40,
+    //             },
+    //             {
+    //                 asset: tokenList[1],
+    //                 weight: 60,
+    //             },
+    //         ],
+    //         pool_id: 2
+    //     },
+    //     {
+    //         assets: [
+    //             {
+    //                 asset: tokenList[0],
+    //                 weight: 10
+    //             },
+    //             {
+    //                 asset: tokenList[1],
+    //                 weight: 20
+    //             },
+    //             {
+    //                 asset: tokenList[2],
+    //                 weight: 30
+    //             },
+    //             {
+    //                 asset: tokenList[3],
+    //                 weight: 40
+    //             },
+    //         ],
+    //         pool_id: 3
+    //     }
+    // ];
+
+    const [pools, setPools] = useState([{assets: [
+                    {
+                        asset: tokenList[0],
+                        weight: 20,
+                    },
+                    {
+                        asset: tokenList[1],
+                        weight: 40,
+                    },
+                    {
+                        asset: tokenList[2],
+                        weight: 40
+                    }
+                ],
+                pool_id: 0}]);
     console.log(pools);
 
     const [pool, setPool] = useState(pools[0]);
@@ -97,7 +114,20 @@ function Pools(){
     const [isOpenWithdraw, setIsOpenWithdraw] = useState(false);
     const [assetAmount, setAssetAmount] = useState([0, 0, 0]);
 
-    function openDeposit(pool){
+    useEffect(() => {
+        async function fetchData() {
+            let result = await getPools();
+            setPools(result);
+            console.log(result);
+            return result;
+        }
+
+        fetchData();
+      }, []);
+    
+
+    async function openDeposit(pool){
+        console.log("vcl");
         console.log(pool);
         setPool(pool);
         setIsOpenDeposit(true);   
