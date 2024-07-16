@@ -12,7 +12,7 @@ import tokenList from "../tokenList.json";
 export async function addLiquidity(pool, asset_amount, signAndSubmitTransaction) {
     const payload = {  
         function: `${moduleAddress}::Multi_Token_Pool::get_pool_amount_out`,
-        functionArguments: [Number(pool.pool_id), Number(asset_amount[0]), pool.assets[0].asset.name, pool.assets[0].asset.symbol]
+        functionArguments: [Number(pool.pool_id), Number(asset_amount[0]) * 1000000, pool.assets[0].asset.name, pool.assets[0].asset.symbol]
         
     }
 
@@ -48,14 +48,14 @@ export async function getTokenAmountInList(value, pool){
     console.log(pool.assets[0].asset.name,  pool.assets[0].asset.symbol, value, moduleAddress);
     const payload = {  
         function: `${moduleAddress}::Multi_Token_Pool::get_token_amount_in_list`,
-        functionArguments: [pool.pool_id, value, pool.assets[0].asset.name, pool.assets[0].asset.symbol]      
+        functionArguments: [pool.pool_id, Number(value) * 1000000, pool.assets[0].asset.name, pool.assets[0].asset.symbol]      
     }
 
     try {
         const response = await  aptos.view({ payload });
         const result = response[0]; 
-        console.log("return result", result);
-        return result;
+        
+        return result.map((value) => Number(value) / 1000000);
     }catch(error){
         console.log("Oops ", error);
         return;
