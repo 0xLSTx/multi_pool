@@ -76,16 +76,16 @@ module lst_addr::Liquid_Staking_Token {
 
     }
 
-    public entry fun mint(sender: &signer, to: address, amount: u64, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
+    public entry fun mint(sender: &signer, to: address, amount: u256, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
         let sender_addr = signer::address_of(sender);
         let asset = get_metadata(name, symbol);
         let managed_fungble_asset = authorized_borrow_refs(sender, asset);
         let to_wallet = primary_fungible_store::ensure_primary_store_exists(to, asset);
-        let fa = fungible_asset::mint(&managed_fungble_asset.mint_ref, amount);
+        let fa = fungible_asset::mint(&managed_fungble_asset.mint_ref, (amount as u64));
         fungible_asset::deposit_with_ref(&managed_fungble_asset.transfer_ref, to_wallet, fa);
     }
 
-    public entry fun transfer(sender: &signer, from: address, to: address, amount: u64, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
+    public entry fun transfer(sender: &signer, from: address, to: address, amount: u256, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
         let sender_addr = signer::address_of(sender);
         let asset = get_metadata(name, symbol);
         let transfer_ref = &authorized_borrow_refs(sender, asset).transfer_ref;
@@ -95,31 +95,31 @@ module lst_addr::Liquid_Staking_Token {
         deposit(to_wallet, fa, transfer_ref);
     }
 
-    public entry fun burn(sender: &signer, from: address, amount: u64, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
+    public entry fun burn(sender: &signer, from: address, amount: u256, name: String, symbol: String) acquires LST, ManagedFungibleAsset {
         let sender_addr = signer::address_of(sender);
         let asset = get_metadata(name, symbol);
         let burn_ref = &authorized_borrow_refs(sender, asset).burn_ref;
         let from_wallet = primary_fungible_store::primary_store(from, asset);
-        fungible_asset::burn_from(burn_ref, from_wallet, amount);
+        fungible_asset::burn_from(burn_ref, from_wallet, (amount as u64));
     }
 
     // ========================================= View Function ==========================================
 
     #[view]
-    public fun get_balance(sender_addr: address, name: String, symbol: String): u64 acquires LST {
+    public fun get_balance(sender_addr: address, name: String, symbol: String): u256 acquires LST {
         let object_address = get_fa_obj_address(name, symbol);
         let fa_metadata_obj: Object<Metadata> = object::address_to_object(object_address);
-        primary_fungible_store::balance(sender_addr, fa_metadata_obj)
+        (primary_fungible_store::balance(sender_addr, fa_metadata_obj) as u256)
     }
     
 
     #[view]
-    public fun get_total_supply(name: String, symbol: String): u64 acquires LST {
+    public fun get_total_supply(name: String, symbol: String): u256 acquires LST {
         let asset = get_metadata(name, symbol);
         let total_supply = fungible_asset::supply(asset);
         if(option::is_some(&total_supply)) {
             let value = option::borrow(&total_supply);
-            let result = (*value as u64);
+            let result = (*value as u256);
             result
         } else {
             0
@@ -133,7 +133,7 @@ module lst_addr::Liquid_Staking_Token {
 
     // ========================================= Helper Function ========================================
     
-    public fun init(sender: &signer) {
+    public fun init_module_for_test(sender: &signer) {
         let constructor_ref = object::create_named_object(sender, b"FA Generator");
         let fa_generator_extend_ref = object::generate_extend_ref(&constructor_ref);
         let lst = LST {
@@ -160,8 +160,8 @@ module lst_addr::Liquid_Staking_Token {
         fungible_asset::deposit_with_ref(transfer_ref, store, fa);
     }
 
-    fun withdraw<T: key>(store: Object<T>, amount: u64, transfer_ref: &TransferRef): FungibleAsset {
-        fungible_asset::withdraw_with_ref(transfer_ref, store, amount)
+    fun withdraw<T: key>(store: Object<T>, amount: u256, transfer_ref: &TransferRef): FungibleAsset {
+        fungible_asset::withdraw_with_ref(transfer_ref, store, (amount as u64))
     }
 
     inline fun authorized_borrow_refs(owner: &signer, asset: Object<Metadata>): &ManagedFungibleAsset acquires ManagedFungibleAsset {
@@ -179,7 +179,7 @@ module lst_addr::Liquid_Staking_Token {
         decimals: u8,
         icon_uri: String,
         project_uri: String,
-        initial_supply: u64,
+        initial_supply: u256,
     ): Object<Metadata> acquires LST, ManagedFungibleAsset {
         create_fa(signer::address_of(sender), name, symbol, decimals, icon_uri, project_uri);
         mint(sender, signer::address_of(sender), initial_supply, name, symbol);

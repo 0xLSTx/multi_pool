@@ -78,7 +78,7 @@ module pool_addr::Pool_Test {
         assert!(index == 0, ERR_TEST);
         assert!(denorm == 50000000, ERR_TEST);
         assert!(balance == 100000000, ERR_TEST);
-        let (total_weight, swap_fee, is_finalized, total_supply) = Multi_Token_Pool::get_pool_info(0);
+        let (total_weight, swap_fee, is_finalized, total_supply, pool_address) = Multi_Token_Pool::get_pool_info(0);
         assert!(total_weight == 100000000, ERR_TEST);
 
         let user1_usdt_balance = Multi_Token_Pool::get_balance(user1_addr, usdt_name, usdt_symbol);
@@ -101,7 +101,7 @@ module pool_addr::Pool_Test {
             name,
             symbol,
         ) = Multi_Token_Pool::get_token_record(0, 0);
-        let (total_weight, swap_fee, is_finalized, total_supply) = Multi_Token_Pool::get_pool_info(0);
+        let (total_weight, swap_fee, is_finalized, total_supply, pool_address) = Multi_Token_Pool::get_pool_info(0);
         assert!(total_weight == 50000000, ERR_TEST);
 
         let user1_eth_balance = Multi_Token_Pool::get_balance(user1_addr, eth_name, eth_symbol);
@@ -346,6 +346,60 @@ module pool_addr::Pool_Test {
         assert!(user2_lpt_balance == 0, ERR_TEST);
         let user2_usdt_balance = Multi_Token_Pool::get_balance(user2_addr, usdt_name, usdt_symbol);
         // print(&user2_usdt_balance);
+    } 
+
+    #[test(admin = @pool_addr, creator = @lst_addr, user1 = @0x123, user2 = @0x1234)]
+    public fun get_token_amount_in_list(admin: signer, creator: signer, user1: signer, user2: signer) {
+        let admin_addr = signer::address_of(&admin);
+        let user1_addr = signer::address_of(&user1);
+        let user2_addr = signer::address_of(&user2);
+        Liquid_Staking_Token::init_module_for_test(&creator);
+        Multi_Token_Pool::init_module_for_test(&admin);
+        let pool_1_address = @0x101;
+        Multi_Token_Pool::create_pool(&user1, pool_1_address, 1000);
+        let usdt_name = string::utf8(b"USD Tether");
+        let usdt_symbol = string::utf8(b"USDT");
+        let eth_name = string::utf8(b"Ethereum");
+        let eth_symbol = string::utf8(b"ETH");
+        let lpt_name = string::utf8(b"LP Token");
+        let lpt_symbol = string::utf8(b"LPT");
+        let usdt = create_token_test(
+            &user1,
+            usdt_name,
+            usdt_symbol,
+            6,
+            string::utf8(b"http://example.com/favicon.ico"),
+            string::utf8(b"http://example.com"),
+            1000000000,
+        );
+
+        let eth = create_token_test(
+            &user1,
+            eth_name,
+            eth_symbol,
+            6,
+            string::utf8(b"http://example.com/favicon.ico"),
+            string::utf8(b"http://example.com"),
+            1000000000,
+        );
+
+        Multi_Token_Pool::bind(&user1, 0, 100000000, 50000000, usdt_name, usdt_symbol);
+        Multi_Token_Pool::bind(&user1, 0, 150000000, 50000000, eth_name, eth_symbol);
+        Liquid_Staking_Token::transfer(&user1, user1_addr, user2_addr, 500000000, usdt_name, usdt_symbol);
+        Liquid_Staking_Token::transfer(&user1, user1_addr, user2_addr, 500000000, eth_name, eth_symbol);
+        Multi_Token_Pool::finalize(&user1, 0);
+        let pool_amount_out = Multi_Token_Pool::get_pool_amount_out(0, 50000000, eth_name, eth_symbol);
+        // print(&pool_amount_out);
+
+        let token_amount_in_list = Multi_Token_Pool::get_token_amount_in_list(0, 50000000, eth_name, eth_symbol);
+        let length = vector::length(&token_amount_in_list);
+        let i = 0;
+        while(i < length) {
+            let token_amount_in = *vector::borrow(&token_amount_in_list, (i as u64));
+            print(&token_amount_in);
+            i = i + 1;
+        }
+
     } 
 
 }

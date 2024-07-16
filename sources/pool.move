@@ -20,9 +20,9 @@ module pool_addr::Multi_Token_Pool {
     const ERR_MATH_APPROX:u64 = 3;
     const ERR_LIMIT_PRICE:u64 = 4;
 
-    const INIT_POOL_SUPPLY: u64 = 100 * 1000000;
-    const BONE: u64 = 1000000;
-    const MIN_FEE: u64 = 1000;
+    const INIT_POOL_SUPPLY: u256 = 100 * 1000000;
+    const BONE: u256 = 1000000;
+    const MIN_FEE: u256 = 1000;
 
     struct PoolList has key {
         pool_list: vector<PoolInfo>,
@@ -31,10 +31,10 @@ module pool_addr::Multi_Token_Pool {
     struct PoolInfo has key, store, copy, drop {
         pool_id: u64,
         pool_address: address,
-        total_weight: u64,
-        swap_fee: u64,
+        total_weight: u256,
+        swap_fee: u256,
         is_finalized: bool,
-        total_supply: u64,
+        total_supply: u256,
         token_list: vector<address>,
         token_record: SimpleMap<address, Record>,
     }
@@ -42,8 +42,8 @@ module pool_addr::Multi_Token_Pool {
     struct Record has key, store, copy, drop {
         bound: bool,
         index: u64, 
-        denorm: u64,
-        balance: u64,
+        denorm: u256,
+        balance: u256,
         name: String,
         symbol: String,
     }
@@ -65,7 +65,7 @@ module pool_addr::Multi_Token_Pool {
 
     // =============================== Entry Function =====================================
 
-    public entry fun create_pool(sender: &signer, pool_address: address, swap_fee: u64) acquires PoolList {
+    public entry fun create_pool(sender: &signer, pool_address: address, swap_fee: u256) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
 
@@ -91,7 +91,7 @@ module pool_addr::Multi_Token_Pool {
         pool.total_supply = pool.total_supply + INIT_POOL_SUPPLY;
     }
 
-    public entry fun bind(sender: &signer, pool_id: u64, balance: u64, denorm: u64, name: String, symbol: String) acquires PoolList {
+    public entry fun bind(sender: &signer, pool_id: u64, balance: u256, denorm: u256, name: String, symbol: String) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
@@ -114,7 +114,7 @@ module pool_addr::Multi_Token_Pool {
         rebind(sender, balance, pool_id, denorm, name, symbol);
     }
 
-    public entry fun rebind(sender: &signer, balance: u64, pool_id: u64, denorm: u64, name: String, symbol: String) acquires PoolList {
+    public entry fun rebind(sender: &signer, balance: u256, pool_id: u64, denorm: u256, name: String, symbol: String) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
@@ -196,10 +196,10 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        token_amount_in: u64,
+        token_amount_in: u256,
         token_out_name: String,
         token_out_symbol: String,
-        token_amount_out: u64,
+        token_amount_out: u256,
     ) acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
@@ -226,8 +226,8 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        token_amount_in: u64,
-        pool_amount_out: u64,
+        token_amount_in: u256,
+        pool_amount_out: u256,
     ) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
@@ -248,8 +248,8 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_out_name: String,
         token_out_symbol: String,
-        pool_amount_in: u64,
-        token_amount_out: u64,
+        pool_amount_in: u256,
+        token_amount_out: u256,
     ) acquires PoolList{
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
@@ -266,7 +266,7 @@ module pool_addr::Multi_Token_Pool {
         };
     }
 
-    public entry fun join_pool(sender: &signer, pool_id: u64, pool_amount_out: u64, max_amounts_in: vector<u64>) acquires PoolList {
+    public entry fun join_pool(sender: &signer, pool_id: u64, pool_amount_out: u256, max_amounts_in: vector<u256>) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         // print(&pool_amount_out);
         // print(&pool_total);
@@ -299,7 +299,7 @@ module pool_addr::Multi_Token_Pool {
         pool.total_supply = pool.total_supply + pool_amount_out;
     }
 
-    public entry fun exit_pool(sender: &signer, pool_id: u64, pool_amount_in: u64, min_amounts_out: vector<u64>) acquires PoolList {
+    public entry fun exit_pool(sender: &signer, pool_id: u64, pool_amount_in: u256, min_amounts_out: vector<u256>) acquires PoolList {
         let sender_addr = signer::address_of(sender);
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
@@ -334,14 +334,14 @@ module pool_addr::Multi_Token_Pool {
     // // ========================================= View Function ==========================================
 
     #[view]
-    public fun get_pool_info(pool_id: u64): (u64, u64, bool, u64) acquires PoolList {
+    public fun get_pool_info(pool_id: u64): (u256, u256, bool, u256, address) acquires PoolList {
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
-        (pool.total_weight, pool.swap_fee, pool.is_finalized, pool.total_supply)
+        (pool.total_weight, pool.swap_fee, pool.is_finalized, pool.total_supply, pool.pool_address)
     }
 
     #[view]
-    public fun get_token_record(pool_id: u64, token_index: u64): (bool, u64, u64, u64, String, String) acquires PoolList {
+    public fun get_token_record(pool_id: u64, token_index: u64): (bool, u64, u256, u256, String, String) acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_list = pool.token_list;
@@ -364,12 +364,12 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        token_amount_in: u64,
+        token_amount_in: u256,
         token_out_name: String,
         token_out_symbol: String,
-        min_amount_out: u64,
-        max_price: u64,
-    ): (u64, u64) acquires PoolList {
+        min_amount_out: u256,
+        max_price: u256,
+    ): (u256, u256) acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_in_address = Liquid_Staking_Token::get_fa_obj_address(token_in_name, token_in_symbol);
@@ -450,12 +450,12 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        max_amount_in: u64,
+        max_amount_in: u256,
         token_out_name: String,
         token_out_symbol: String,
-        token_amount_out: u64,
-        max_price: u64,
-    ): (u64, u64) acquires PoolList {
+        token_amount_out: u256,
+        max_price: u256,
+    ): (u256, u256) acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_in_address = Liquid_Staking_Token::get_fa_obj_address(token_in_name, token_in_symbol);
@@ -532,9 +532,9 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String, 
-        token_amount_in: u64,
-        min_pool_amount_out: u64,
-    ): u64 acquires PoolList {
+        token_amount_in: u256,
+        min_pool_amount_out: u256,
+    ): u256 acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_record = &mut pool.token_record;
@@ -562,9 +562,9 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        pool_amount_out: u64,
-        max_amount_in: u64,
-    ): u64 acquires PoolList {
+        pool_amount_out: u256,
+        max_amount_in: u256,
+    ): u256 acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_record = &mut pool.token_record;
@@ -591,9 +591,9 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_in_name: String,
         token_in_symbol: String,
-        pool_amount_in: u64,
-        min_amount_out: u64,
-    ): u64 acquires PoolList {
+        pool_amount_in: u256,
+        min_amount_out: u256,
+    ): u256 acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_record = &mut pool.token_record;
@@ -620,9 +620,9 @@ module pool_addr::Multi_Token_Pool {
         pool_id: u64,
         token_out_name: String,
         token_out_symbol: String,
-        token_amount_out: u64,
-        max_pool_amount_in: u64,
-    ): u64 acquires PoolList {
+        token_amount_out: u256,
+        max_pool_amount_in: u256,
+    ): u256 acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_record = &mut pool.token_record;
@@ -644,7 +644,7 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_pool_amount_out(pool_id: u64, token_amount_in: u64, name: String, symbol: String): u64 acquires PoolList {
+    public fun get_pool_amount_out(pool_id: u64, token_amount_in: u256, name: String, symbol: String): u256 acquires PoolList {
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
         let token_list = pool.token_list;
@@ -657,9 +657,9 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_token_amount_in_list(pool_id: u64, token_amount_in: u64, name: String, symbol: String): vector<u64> acquires PoolList {
+    public fun get_token_amount_in_list(pool_id: u64, token_amount_in: u256, name: String, symbol: String): vector<u256> acquires PoolList {
         let pool_amount_out = get_pool_amount_out(pool_id, token_amount_in, name, symbol);
-        let token_amount_in_list = vector::empty<u64>();
+        let token_amount_in_list = vector::empty<u256>();
 
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
@@ -674,13 +674,18 @@ module pool_addr::Multi_Token_Pool {
             let record = simple_map::borrow(&token_record, token_address);
             let token_amount_in = Pool_Math::mul(ratio, record.balance);
             vector::push_back(&mut token_amount_in_list, token_amount_in);
+            // print(&pool_amount_out);
+            // print(&pool.total_supply);
+            // print(&ratio);
+            // print(&record.balance);
+            // print(&token_amount_in);
             i = i + 1;
         };
         token_amount_in_list
     }
 
     #[view]
-    public fun get_balance(sender_addr: address, name: String, symbol: String): u64 {
+    public fun get_balance(sender_addr: address, name: String, symbol: String): u256 {
         Liquid_Staking_Token::get_balance(sender_addr, name, symbol)
     }
 
@@ -736,8 +741,8 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_pool_balance(pool_id: u64): vector<u64> acquires PoolList {
-        let token_balance_list = vector::empty<u64>();
+    public fun get_pool_balance(pool_id: u64): vector<u256> acquires PoolList {
+        let token_balance_list = vector::empty<u256>();
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
         let token_list = pool.token_list;
@@ -755,8 +760,8 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_token_denorm_list(pool_id: u64): vector<u64> acquires PoolList {
-        let token_denorm_list = vector::empty<u64>();
+    public fun get_token_denorm_list(pool_id: u64): vector<u256> acquires PoolList {
+        let token_denorm_list = vector::empty<u256>();
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
         let token_list = pool.token_list;
@@ -774,14 +779,14 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_token_weight_list(pool_id: u64): vector<u64> acquires PoolList {
-        let token_weight_list = vector::empty<u64>();
+    public fun get_token_weight_list(pool_id: u64): vector<u256> acquires PoolList {
+        let token_weight_list = vector::empty<u256>();
         let pool_list = borrow_global<PoolList>(@pool_addr);
         let pool = vector::borrow(&pool_list.pool_list, pool_id);
         let token_list = pool.token_list;
         let token_record = pool.token_record;
         let num_tokens = vector::length(&token_list);
-        let (total_weight, swap_fee, is_finalized, total_supply) = get_pool_info(pool_id);
+        let (total_weight, swap_fee, is_finalized, total_supply, pool_address) = get_pool_info(pool_id);
         let i = 0;
         while (i < num_tokens) {
             let token_address = vector::borrow(&token_list, (i as u64));
@@ -795,7 +800,7 @@ module pool_addr::Multi_Token_Pool {
     }
 
     #[view]
-    public fun get_spot_price(pool_id: u64, token_in_name: String, token_in_symbol: String, token_out_name: String, token_out_symbol: String): u64 acquires PoolList {
+    public fun get_spot_price(pool_id: u64, token_in_name: String, token_in_symbol: String, token_out_name: String, token_out_symbol: String): u256 acquires PoolList {
         let pool_list = borrow_global_mut<PoolList>(@pool_addr);
         let pool = vector::borrow_mut(&mut pool_list.pool_list, pool_id);
         let token_in_address = Liquid_Staking_Token::get_fa_obj_address(token_in_name, token_in_symbol);
@@ -828,30 +833,30 @@ module pool_addr::Multi_Token_Pool {
     // // ========================================= Helper Function ========================================
 
     // // transfer amount from sender to pool
-    fun pull_underlying(sender: &signer, pool_address: address, amount: u64, name: String, symbol: String) {
+    fun pull_underlying(sender: &signer, pool_address: address, amount: u256, name: String, symbol: String) {
         let sender_addr = signer::address_of(sender);
         Liquid_Staking_Token::transfer(sender, sender_addr, pool_address, amount, name, symbol);
     }
     
     // // transfer amount from pool to sender
-    fun push_underlying(sender: &signer, pool_address: address, amount: u64, name: String, symbol: String) {
+    fun push_underlying(sender: &signer, pool_address: address, amount: u256, name: String, symbol: String) {
         let sender_addr = signer::address_of(sender);
         Liquid_Staking_Token::transfer(sender, pool_address, sender_addr, amount, name, symbol);
     }
 
-    fun mint_and_push_pool_share(sender: &signer, to: address, amount: u64) { 
+    fun mint_and_push_pool_share(sender: &signer, to: address, amount: u256) { 
         let lpt_name = string::utf8(b"LP Token");
         let lpt_symbol = string::utf8(b"LPT");
         Liquid_Staking_Token::mint(sender, to, amount, lpt_name, lpt_symbol);
     }
 
-    fun pull_pool_share(sender: &signer, pool_address: address, sender_addr: address, amount: u64) {
+    fun pull_pool_share(sender: &signer, pool_address: address, sender_addr: address, amount: u256) {
         let lpt_name = string::utf8(b"LP Token");
         let lpt_symbol = string::utf8(b"LPT");
         Liquid_Staking_Token::transfer(sender, sender_addr, pool_address, amount, lpt_name, lpt_symbol);
     }
 
-    fun burn_pool_share(sender: &signer, pool_address: address, amount: u64) {
+    fun burn_pool_share(sender: &signer, pool_address: address, amount: u256) {
         let lpt_name = string::utf8(b"LP Token");
         let lpt_symbol = string::utf8(b"LPT");
         Liquid_Staking_Token::burn(sender, pool_address, amount, lpt_name, lpt_symbol);

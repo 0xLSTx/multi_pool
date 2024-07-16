@@ -2,10 +2,10 @@ module pool_addr::Pool_Math {
     use std::debug::print;
     use std::string::{Self, String, utf8};
 
-    const BONE:u64 = 1000000;
-    const EXIT_FEE: u64 = 0;
+    const BONE:u256 = 1000000;
+    const EXIT_FEE: u256 = 0;
 
-    const ERR_MATH: u64 = 1;
+    const ERR_MATH: u256 = 1;
 
     public fun hellworld(): String {
         let check = string::utf8(b"hello world");
@@ -13,12 +13,12 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_spot_price (
-        token_balance_in: u64,
-        token_weight_in: u64,
-        token_balance_out: u64,
-        token_weight_out: u64,
-        swap_fee: u64,
-    ): u64 {
+        token_balance_in: u256,
+        token_weight_in: u256,
+        token_balance_out: u256,
+        token_weight_out: u256,
+        swap_fee: u256,
+    ): u256 {
         let numer = bdiv(token_balance_in, token_weight_in);
         let denom = bdiv(token_balance_out, token_weight_out);
         let ratio = bdiv(numer, denom);
@@ -28,13 +28,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_out_given_in(
-        token_balance_in: u64,
-        token_weight_in: u64,
-        token_balance_out: u64,
-        token_weight_out: u64,
-        token_amount_in: u64,
-        swap_fee: u64,
-    ): u64 {
+        token_balance_in: u256,
+        token_weight_in: u256,
+        token_balance_out: u256,
+        token_weight_out: u256,
+        token_amount_in: u256,
+        swap_fee: u256,
+    ): u256 {
         let weight_ratio = bdiv(token_weight_in, token_weight_out);
         let adjusted_in = bsub(BONE, swap_fee);
         adjusted_in = bmul(token_amount_in, adjusted_in);
@@ -47,13 +47,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_in_given_out(
-        token_balance_in: u64,
-        token_weight_in: u64,
-        token_balance_out: u64,
-        token_weight_out: u64,
-        token_amount_out: u64,
-        swap_fee: u64
-    ): u64 {
+        token_balance_in: u256,
+        token_weight_in: u256,
+        token_balance_out: u256,
+        token_weight_out: u256,
+        token_amount_out: u256,
+        swap_fee: u256
+    ): u256 {
         let weight_ratio = bdiv(token_weight_out, token_weight_in);
         let diff = bsub(token_balance_out, token_amount_out);
         let y = bdiv(token_balance_out, diff);
@@ -65,13 +65,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_pool_out_given_single_in(
-        token_balance_in: u64,
-        token_weight_in: u64,
-        pool_supply: u64,
-        total_weight: u64,
-        token_amount_in: u64,
-        swap_fee: u64
-    ): u64 {
+        token_balance_in: u256,
+        token_weight_in: u256,
+        pool_supply: u256,
+        total_weight: u256,
+        token_amount_in: u256,
+        swap_fee: u256
+    ): u256 {
         let normalized_weight = bdiv(token_weight_in, total_weight);
         let zaz = bmul(bsub(BONE, normalized_weight), swap_fee);
         let token_amount_in_after_fee = bmul(token_amount_in, bsub(BONE, zaz));
@@ -86,13 +86,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_single_in_given_pool_out(
-        token_balance_in: u64,
-        token_weight_in: u64,
-        pool_supply: u64,
-        total_weight: u64,
-        pool_amount_out: u64,
-        swap_fee: u64
-    ): u64 {
+        token_balance_in: u256,
+        token_weight_in: u256,
+        pool_supply: u256,
+        total_weight: u256,
+        pool_amount_out: u256,
+        swap_fee: u256
+    ): u256 {
         let normalized_weight = bdiv(token_weight_in, total_weight);
         let new_pool_supply = badd(pool_supply, pool_amount_out);
         let pool_ratio = bdiv(new_pool_supply, pool_supply);
@@ -108,13 +108,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_single_out_given_pool_in(
-        token_balance_out: u64,
-        token_weight_out: u64,
-        pool_supply: u64,
-        total_weight: u64,
-        pool_amount_in: u64,
-        swap_fee: u64
-    ): u64 {
+        token_balance_out: u256,
+        token_weight_out: u256,
+        pool_supply: u256,
+        total_weight: u256,
+        pool_amount_in: u256,
+        swap_fee: u256
+    ): u256 {
         let normalized_weight = bdiv(token_weight_out, total_weight);
         let pool_amount_in_after_exit_fee = bmul(pool_amount_in, bsub(BONE, EXIT_FEE));
         let new_pool_supply = bsub(pool_supply, pool_amount_in_after_exit_fee);
@@ -131,13 +131,13 @@ module pool_addr::Pool_Math {
     }
 
     public fun calc_pool_in_given_single_out(
-        token_balance_out: u64,
-        token_weight_out: u64,
-        pool_supply: u64,
-        total_weight: u64,
-        token_amount_out: u64,
-        swap_fee: u64
-    ): u64 {
+        token_balance_out: u256,
+        token_weight_out: u256,
+        pool_supply: u256,
+        total_weight: u256,
+        token_amount_out: u256,
+        swap_fee: u256
+    ): u256 {
         let normalized_weight = bdiv(token_weight_out, total_weight);
         let zoo = bsub(BONE, normalized_weight);
         let zar = bmul(zoo, swap_fee);
@@ -154,37 +154,35 @@ module pool_addr::Pool_Math {
         pool_amount_in
     }
     
-    public fun mul(a: u64, b: u64): u64 {
+    public fun mul(a: u256, b: u256): u256 {
         bmul(a, b)
     }
 
-    public fun div(a: u64, b: u64): u64 {
+    public fun div(a: u256, b: u256): u256 {
         bdiv(a, b)
     }
 
     // =========================================== Helper Funtion ====================================
 
-    fun btoi(a: u64): u64 {
+    fun btoi(a: u256): u256 {
         a / BONE
     }
 
-    fun bfloor(a: u64): u64 {
+    fun bfloor(a: u256): u256 {
         btoi(a) * BONE
     }
 
-    fun badd(a: u64, b: u64): u64 {
+    fun badd(a: u256, b: u256): u256 {
         let c = a + b;
-        assert!(c >= a, ERR_MATH);
         c
     }
 
-    fun bsub(a: u64, b: u64): u64 {
+    fun bsub(a: u256, b: u256): u256 {
         let (c, flag) = bsub_sign(a, b);
-        assert!(!flag, ERR_MATH);
         c
     }
 
-    fun bsub_sign(a: u64, b: u64): (u64, bool) {
+    fun bsub_sign(a: u256, b: u256): (u256, bool) {
         if (a >= b) {
             (a - b, false)
         } else {
@@ -192,15 +190,13 @@ module pool_addr::Pool_Math {
         }
     }
 
-    fun bmul(a: u64, b: u64): u64 {
+    fun bmul(a: u256, b: u256): u256 {
         // print(&a);
         // print(&b);
         let c0 = a * b;
         // print(&c0);
-        assert!(a == 0 || c0 / a == b, ERR_MATH);
         let c1 = c0 + (BONE / 2);
         // print(&c1);
-        assert!(c1 >= c0, ERR_MATH);
         let c2 = c1 / BONE;
         // print(&c2);
         let check = string::utf8(b"------");
@@ -208,17 +204,14 @@ module pool_addr::Pool_Math {
         c2
     }
 
-    fun bdiv(a: u64, b: u64): u64 {
-        assert!(b != 0, ERR_MATH);
+    fun bdiv(a: u256, b: u256): u256 {
         let c0 = a * BONE;
-        assert!(a == 0 || c0 / a == BONE, ERR_MATH);
         let c1 = c0 + (b / 2);
-        assert!(c1 >= c0, ERR_MATH);
         c1 / b
     }
 
-    fun bpowi(a: u64, n: u64): u64 {
-        let z:u64 = 0;
+    fun bpowi(a: u256, n: u256): u256 {
+        let z:u256 = 0;
         if(n % 2 != 0) {
             z = a;
         } else {
@@ -236,7 +229,7 @@ module pool_addr::Pool_Math {
         z
     }
 
-    fun bpow(base: u64, exp: u64): u64 {
+    fun bpow(base: u256, exp: u256): u256 {
         let whole = bfloor(exp);
         let remain = bsub(exp, whole);
         let whole_pow = bpowi(base, btoi(whole));
@@ -249,7 +242,7 @@ module pool_addr::Pool_Math {
         }
     }
 
-    fun bpow_approx(base: u64, exp: u64, precision: u64): u64 {
+    fun bpow_approx(base: u256, exp: u256, precision: u256): u256 {
         let a = exp;
         let (x, xneg) = bsub_sign(base, BONE);
         let term = BONE;
