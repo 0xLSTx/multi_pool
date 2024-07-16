@@ -24,6 +24,8 @@ export async function addLiquidity(pool, asset_amount, signAndSubmitTransaction)
         return;
     }
 
+    console.log(result);
+
     const join_pool_payload = {
         data: {
             function: `${moduleAddress}::Multi_Token_Pool::join_pool`,
@@ -59,14 +61,39 @@ export async function getTokenAmountInList(value, pool){
     }
 }
 
+function addDecimal(value, decimal){
+    return value * Math.pow(10, decimal);
+}
+
 export async function createPool(assets, assetAmount, assetWeights, signAndSubmitTransaction) {
     const pool_account = Account.generate();
     console.log(pool_account.accountAddress.toString());
+
+    // check pool_id
+
+    const payload = {  
+        function: `${moduleAddress}::Multi_Token_Pool::get_num_pools`,
+        functionArguments: []
+        
+    }
+
+    let pool_id;
+
+    try {
+        pool_id = (await aptos.view({ payload }))[0]; 
+        console.log(pool_id);
+    } catch(error) {
+        console.log(error);
+    }   
+
+    pool_id = Number(pool_id);
+
+    console.log("Pool Id is: ", pool_id);
     
     const create_pool_payload = {
         data: {
             function: `${moduleAddress}::Multi_Token_Pool::create_pool`,
-            functionArguments: [pool_account.accountAddress.toString(), 0]
+            functionArguments: [pool_account.accountAddress.toString(), 30000]
         }
     };
 
@@ -85,7 +112,7 @@ export async function createPool(assets, assetAmount, assetWeights, signAndSubmi
         const bind_payload = {
             data: {
                 function: `${moduleAddress}::Multi_Token_Pool::bind`,
-                functionArguments: [2, assetAmount[i], assetWeights[i], assets[i].name, assets[i].symbol]
+                functionArguments: [pool_id, addDecimal(assetAmount[i], 6), assetWeights[i], assets[i].name, assets[i].symbol]
             }
         };
 
@@ -104,18 +131,18 @@ export async function createPool(assets, assetAmount, assetWeights, signAndSubmi
     const finalize_payload = {
         data: {
             function: `${moduleAddress}::Multi_Token_Pool::finalize`,
-            functionArguments: [2]
+            functionArguments: [pool_id]
         }
     };
 
     try {
         const response = signAndSubmitTransaction(finalize_payload);
+        console.log("============FINALIZE SUCCESS============");
         return response;
-        // await aptos.waitForTransaction({transactionHash:response.hash});
     } catch(error) {
         console.log(error);
         return;
     }
 
-    console.log("============FINALIZE SUCCESS============");
+    
 }

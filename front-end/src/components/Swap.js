@@ -51,7 +51,7 @@ function Swap(props) {
 
   async function changeAmount(e) {
     setTokenOneAmount(e.target.value);
-
+    
     const payload = {
         function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
         functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, (Number(e.target.value) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]

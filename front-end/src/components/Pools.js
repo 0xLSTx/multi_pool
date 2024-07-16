@@ -24,15 +24,15 @@ function Pools(){
         {
             assets: [
                 {
-                    asset: tokenList[0],
+                    asset: tokenList[3],
                     weight: 20,
                 },
                 {
-                    asset: tokenList[1],
+                    asset: tokenList[4],
                     weight: 40,
                 },
                 {
-                    asset: tokenList[2],
+                    asset: tokenList[5],
                     weight: 40
                 }
             ],
@@ -41,15 +41,15 @@ function Pools(){
         {
             assets: [
                 {
-                    asset: tokenList[1],
+                    asset: tokenList[3],
                     weight: 60,
                 },
                 {
-                    asset: tokenList[2],
+                    asset: tokenList[5],
                     weight: 20,
                 },
                 {
-                    asset: tokenList[3],
+                    asset: tokenList[7],
                     weight: 20,
                 },
             ],
@@ -58,15 +58,36 @@ function Pools(){
         {
             assets: [
                 {
-                    asset: tokenList[1],
+                    asset: tokenList[3],
                     weight: 40,
                 },
                 {
-                    asset: tokenList[3],
+                    asset: tokenList[4],
                     weight: 60,
                 },
             ],
             pool_id: 2
+        },
+        {
+            assets: [
+                {
+                    asset: tokenList[3],
+                    weight: 10
+                },
+                {
+                    asset: tokenList[4],
+                    weight: 20
+                },
+                {
+                    asset: tokenList[5],
+                    weight: 30
+                },
+                {
+                    asset: tokenList[6],
+                    weight: 40
+                },
+            ],
+            pool_id: 3
         }
     ];
     console.log(pools);
