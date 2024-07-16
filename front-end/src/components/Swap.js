@@ -183,18 +183,54 @@ function Swap(props) {
   },[isSuccess])
 
 
-  const settings = (
-    <>
-      <div>Slippage Tolerance</div>
-      <div>
-        <Radio.Group value={slippage} onChange={handleSlippageChange}>
-          <Radio.Button value={0.5}>0.5%</Radio.Button>
-          <Radio.Button value={2.5}>2.5%</Radio.Button>
-          <Radio.Button value={5}>5.0%</Radio.Button>
-        </Radio.Group>
-      </div>
-    </>
-  );
+	const settings = (
+		<>
+		<div>Slippage Tolerance</div>
+		<div>
+			<Radio.Group value={slippage} onChange={handleSlippageChange}>
+			<Radio.Button value={0.5}>0.5%</Radio.Button>
+			<Radio.Button value={2.5}>2.5%</Radio.Button>
+			<Radio.Button value={5}>5.0%</Radio.Button>
+			</Radio.Group>
+		</div>
+		</>
+	);
+
+	async function _swap(){
+		const response = await swap(account, tokenOne, tokenTwo, tokenOneAmount, signAndSubmitTransaction);
+		if(!response){
+			messageApi.destroy();
+			messageApi.open({
+				type: 'error',
+				content: 'Transaction Rejected',
+				duration: 1.50,
+			});
+		}else{
+			messageApi.destroy();
+			messageApi.open({
+				type: 'loading',
+				content: 'Transaction is Pending...',
+				duration: 0,
+			});
+
+			try{
+				await aptos.waitForTransaction({transactionHash:response.hash});
+			}catch{
+				messageApi.destroy();
+				messageApi.open({
+					type: 'error',
+					content: 'Transaction Failed',
+					duration: 1.50,
+				});
+			}
+			messageApi.destroy();
+			messageApi.open({
+				type: 'success',
+				content: 'Transaction Successful',
+				duration: 1.5,
+			})
+		}
+	}
 
   return (
     <>
@@ -257,7 +293,7 @@ function Swap(props) {
             <DownOutlined />
           </div>
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={() => swap(account, tokenOne, tokenTwo, tokenOneAmount, signAndSubmitTransaction)}>Swap</div>
+        <div className="swapButton" disabled={!tokenOneAmount} onClick={_swap}>Swap</div>
       </div>
     </>
   );

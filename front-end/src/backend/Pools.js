@@ -35,7 +35,7 @@ export async function addLiquidity(pool, asset_amount, signAndSubmitTransaction)
     }
 
     try {
-        const response = signAndSubmitTransaction(join_pool_payload);
+        const response = await signAndSubmitTransaction(join_pool_payload);
         return response;
     }
     catch (error) {
@@ -213,7 +213,7 @@ export async function createPool(assets, assetAmount, assetWeights, signAndSubmi
     };
 
     try {
-        const response = signAndSubmitTransaction(finalize_payload);
+        const response = await signAndSubmitTransaction(finalize_payload);
         console.log("============FINALIZE SUCCESS============");
         return response;
     } catch(error) {

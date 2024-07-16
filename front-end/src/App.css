@@ -12,8 +12,7 @@ header {
 }
 
 .logo{
-  width: 40px;
-  height: 40px;
+  width: 80px;
   padding-right: 20px;
 }
 
@@ -507,4 +506,14 @@ header {
 .closeButton:hover {
   cursor: pointer;
   background-color: #3b4874
+}
+
+.wallet-button{
+    background-color: #1A1B1F !important;
+    border: none !important;
+    background:  linear-gradient(0deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.15));
+    font-size: 12 !important;
+    font-weight: 500 !important;
+    height: 20 !important;
+    border-radius: 6 !important;
 }

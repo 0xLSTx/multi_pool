@@ -18,19 +18,6 @@ import { moduleAddress } from "../App.js";
 import { Account } from "@aptos-labs/ts-sdk";
 import { createPool } from "../backend/Pools.js";
 
-function createData(name, calories, fat, carbs, protein) {
-    return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Ecewqewqlair', 262, 16.0, 24, 6.0),
-    createData('Cupcake', 305, 3.7, 67, 4.3),
-    createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-  
-
 function CreatePool() {
     const [assets, setAssets] = useState([tokenList[0], tokenList[1]]);
     const [assetWeights, setAssetWeights] = useState([null, null]);
@@ -39,6 +26,7 @@ function CreatePool() {
     const [isOpen, setIsOpen] = useState(false);
     const [modalAsset, setModalAsset] = useState(0);
     const { account, signAndSubmitTransaction } = useWallet();
+    const [messageApi, contextHolder] = message.useMessage();
 
     const addAsset = (newAsset) => {
         setAssets([...assets, newAsset]);
@@ -141,9 +129,46 @@ function CreatePool() {
         return (result * 100).toFixed(2);
     }
 
+    async function _createPool(){
+        const response = await createPool(assets, assetAmount, assetWeights, signAndSubmitTransaction);
+        if(!response){
+            messageApi.destroy();
+            messageApi.open({
+                type: 'error',
+                content: 'Transaction Rejected',
+                duration: 1.50,
+            });
+        }else{
+            messageApi.destroy();
+            messageApi.open({
+                type: 'loading',
+                content: 'Transaction is Pending...',
+                duration: 0,
+            });
+
+            try{
+                await aptos.waitForTransaction({transactionHash:response.hash});
+            }catch{
+                messageApi.destroy();
+                messageApi.open({
+                    type: 'error',
+                    content: 'Transaction Failed',
+                    duration: 1.50,
+                });
+            }
+            messageApi.destroy();
+            messageApi.open({
+                type: 'success',
+                content: 'Transaction Successful',
+                duration: 1.5,
+            })
+        }
+    }
+
 
     return (
         <div>
+            {contextHolder}
             <Modal
                 open={isOpen}
                 footer={null}
@@ -245,7 +270,7 @@ function CreatePool() {
                     </Table>
                     </TableContainer>
 
-                <div className="swapButton" onClick={() => createPool(assets, assetAmount, assetWeights, signAndSubmitTransaction)}>Create Pool</div>
+                <div className="swapButton" onClick={_createPool}>Create Pool</div>
             </div>
         </div>
     )

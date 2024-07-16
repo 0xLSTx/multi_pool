@@ -1,5 +1,5 @@
 import React from "react";
-import Logo from "../moralis-logo.svg";
+import Logo from "../Logo.png";
 import Eth from "../eth.svg";
 import { Link } from "react-router-dom";
 import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
@@ -12,7 +12,7 @@ function Header(props) {
   return (
     <header>
       <div className="leftH">
-        <img src={Logo} alt="logo" className="logo" />
+        <img src={Logo} alt="logo" className="logo"/>
         <Link to="/" className="link">
           <div className="headerItem">Swap</div>
         </Link>

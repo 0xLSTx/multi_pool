@@ -18,6 +18,9 @@ import { aptos } from "../App.js";
 import { Account } from "@aptos-labs/ts-sdk";
 import {addLiquidity, getTokenAmountInList, getPools} from "../backend/Pools.js"
 import { useEffect } from "react";
+import { LoadingOutlined } from '@ant-design/icons';
+import { Flex, Spin } from 'antd';
+
 
 function Pools(){
     const { account, signAndSubmitTransaction } = useWallet();
@@ -92,27 +95,14 @@ function Pools(){
     //     }
     // ];
 
-    const [pools, setPools] = useState([{assets: [
-                    {
-                        asset: tokenList[0],
-                        weight: 20,
-                    },
-                    {
-                        asset: tokenList[1],
-                        weight: 40,
-                    },
-                    {
-                        asset: tokenList[2],
-                        weight: 40
-                    }
-                ],
-                pool_id: 0}]);
+    const [pools, setPools] = useState(null);
     console.log(pools);
 
-    const [pool, setPool] = useState(pools[0]);
+    const [pool, setPool] = useState(null);
     const [isOpenDeposit, setIsOpenDeposit] = useState(false);
     const [isOpenWithdraw, setIsOpenWithdraw] = useState(false);
     const [assetAmount, setAssetAmount] = useState([0, 0, 0]);
+    const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
         async function fetchData() {
@@ -131,7 +121,7 @@ function Pools(){
         console.log(pool);
         setPool(pool);
         setIsOpenDeposit(true);   
-        setAssetAmount(pool.assets.map((asset) => 0));
+        setAssetAmount(pool.assets.map((asset) => null));
     }
 
     function openWithdraw(pool){
@@ -179,10 +169,68 @@ function Pools(){
         }
     }
 
-    
+    async function _addLiquidity(){
+        const response = await addLiquidity(pool, assetAmount, signAndSubmitTransaction);
+        setIsOpenDeposit(false);
+        setIsOpenWithdraw(false);
+        if(!response){
+            messageApi.destroy();
+            messageApi.open({
+                type: 'error',
+                content: 'Transaction Rejected',
+                duration: 1.50,
+            });
+        }else{
+            messageApi.destroy();
+            messageApi.open({
+                type: 'loading',
+                content: 'Transaction is Pending...',
+                duration: 0,
+            });
+
+            try{
+                await aptos.waitForTransaction({transactionHash:response.hash});
+            }catch{
+                messageApi.destroy();
+                messageApi.open({
+                    type: 'error',
+                    content: 'Transaction Failed',
+                    duration: 1.50,
+                });
+            }
+            messageApi.destroy();
+            messageApi.open({
+                type: 'success',
+                content: 'Transaction Successful',
+                duration: 1.5,
+            })
+
+            
+        }
+    }
+
+    function stringifyObject(obj) {
+        return JSON.stringify(obj, Object.keys(obj).sort());
+      }
+      function hashString(str) {
+        let hash = 0;
+        if (str.length === 0) return hash;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash |= 0; 
+        }
+        return hash;
+      }
+      
+      function getObjectHash(obj) {
+        const str = stringifyObject(obj);
+        return hashString(str);
+      }
 
     return (
         <div>
+            {contextHolder}
             <Modal
                 open={isOpenDeposit}
                 footer={null}
@@ -190,7 +238,7 @@ function Pools(){
                 title="Add liquidity"
             >
                 <div className="modalContent" style={{paddingTop: 20}}>
-                    {pool.assets.map((asset, index) => (
+                    {pool && pool.assets.map((asset, index) => (
                         <div className="inputsDeposit">
                             <Input
                                 className="depositInput"
@@ -205,7 +253,7 @@ function Pools(){
                         </div>
                     ))}
                     <div style={{width: "90%", margin: "0 auto"}}>
-                        <div className="swapButton" style={{marginBottom: 0}} onClick={() => addLiquidity(pool, assetAmount, signAndSubmitTransaction)}>Add liquidity</div>
+                        <div className="swapButton" style={{marginBottom: 0}} onClick={_addLiquidity}>Add liquidity</div>
                     </div>
                 </div>
                 
@@ -224,7 +272,7 @@ function Pools(){
                             placeholder="0"
                         />
                         <div className="multiAsset" >
-                            {pool.assets.map((asset, index) => (
+                            {pool && pool.assets.map((asset, index) => (
                                 <img
                                     src={asset.asset.img}
                                     alt="assetOneLogo"
@@ -250,7 +298,7 @@ function Pools(){
                                 You receive
                             </div>
                             <div style={{ color: "#d3d3d3"}}>
-                                {pool.assets.map((asset, index) => (
+                                {pool && pool.assets.map((asset, index) => (
                                     <div style={{marginTop: 8, display: "flex", flexDirection:"row", gap: "4px"}}>
                                         <div>
                                             10.00
@@ -286,55 +334,62 @@ function Pools(){
                             <TableCell sx={{maxWidth: 30}}  style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right"></TableCell>
                         </TableRow>
                         </TableHead>
-                        <TableBody>
-                        {pools.map((pool, index) => (
-                            <TableRow
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                            >
-                                <TableCell sx={{maxWidth: 150}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    <div className="assetBox">
-                                        {
-                                            pool.assets.map((asset, index) => (
-                                                
-                                                <div style={{display: 'inline-block'}} className="assetHihi">
-                                                        <div className="asset">
-                                                            <img src={asset.asset.img} alt="assetOneLogo" className="assetLogo"/>
-                                                            {asset.asset.ticker}
-                                                            <span style={{fontSize: 14, color: "#d3d3d3"}}>
-                                                                {asset.weight}%
-                                                            </span>
-                                                        </div>
-                                                </div>
-                                            ))
-                                        }
-                                    </div>
-                                </TableCell>
-                                <TableCell style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    10.00
-                                </TableCell>
-                                <TableCell style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    10.00
-                                </TableCell>
-                                <TableCell sx={{maxWidth: 40}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    10.00
-                                </TableCell>
-                                <TableCell sx={{maxWidth: 25}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    10.00
-                                </TableCell>
-                                <TableCell sx={{maxWidth: 30}}  style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
-                                    <div style={{display: 'inline-block'}}>
-                                        <div className="colContainer">
-                                            <div className="generalButton" onClick={() => openDeposit(pool)}> <AddIcon/></div>
-                                            <div className="generalButton" onClick={() => openWithdraw(pool)}> <RemoveIcon/></div>
+                        
+                        {pools && 
+                            <TableBody>
+                            {pools.map((pool, index) => (
+                                <TableRow
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                >
+                                    <TableCell sx={{maxWidth: 150}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        <div className="assetBox">
+                                            {
+                                                pool.assets.map((asset, index) => (
+                                                    
+                                                    <div style={{display: 'inline-block'}} className="assetHihi">
+                                                            <div className="asset">
+                                                                <img src={asset.asset.img} alt="assetOneLogo" className="assetLogo"/>
+                                                                {asset.asset.ticker}
+                                                                <span style={{fontSize: 14, color: "#d3d3d3"}}>
+                                                                    {asset.weight}%
+                                                                </span>
+                                                            </div>
+                                                    </div>
+                                                ))
+                                            }
                                         </div>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                            
-                        ))}
-                        </TableBody>
+                                    </TableCell>
+                                    <TableCell style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        ${Math.abs(getObjectHash(pool) % 123456)}
+                                    </TableCell>
+                                    <TableCell style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        ${Math.abs(getObjectHash(pool) % 12345) % 1040}
+                                    </TableCell>
+                                    <TableCell sx={{maxWidth: 40}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        ${Math.abs(getObjectHash(pool) % 95737)}
+                                    </TableCell>
+                                    <TableCell sx={{maxWidth: 25}} style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        {Math.abs(getObjectHash(pool) % 345)}%
+                                    </TableCell>
+                                    <TableCell sx={{maxWidth: 30}}  style={{fontSize: 16, color: 'white', fontWeight: 'bold', background: '#0E111B'}} align="right">
+                                        <div style={{display: 'inline-block'}}>
+                                            <div className="colContainer">
+                                                <div className="generalButton" onClick={() => openDeposit(pool)}> <AddIcon/></div>
+                                                <div className="generalButton" onClick={() => openWithdraw(pool)}> <RemoveIcon/></div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                                
+                            ))}
+                            </TableBody>
+                        }
                     </Table>
                 </TableContainer>
+                <div style={{width: "100%", margin: "auto 0"}}>
+                {!pools && 
+                        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />}
+                        </div>
             </div>
         </div>
     )
