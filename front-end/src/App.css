@@ -511,7 +511,7 @@ header {
 .wallet-button{
     background-color: #1A1B1F !important;
     border: none !important;
-    background:  linear-gradient(0deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.15));
+    background:  linear-gradient(0deg, rgba(203, 195, 227, 0.125), rgba(203, 195, 227, 0.25));
     font-size: 12 !important;
     font-weight: 500 !important;
     height: 20 !important;
