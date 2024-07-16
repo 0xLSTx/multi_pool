@@ -3,7 +3,7 @@ Based on the design of Balancer on Ethereum, we propose a solution of a multi to
 # High-Level Architecture
 `MultiStak` is a multi-token pool specifically designed for Liquid Staking Tokens (`LST`) on the **Aptos** platform. Drawing inspiration from the Balancer protocol on Ethereum, `MultiStak` aims to consolidate the liquidity from various `LSTs` into a unified pool. This allows for efficient swapping, liquidity addition, and overall better management of liquid assets in the staking ecosystem.
 # How It Is Built
-`MultiStak` leverages the robust design principles of the Balancer protocol but tailors them to suit the unique needs of the `Aptos` blockchain. Key components include:
+`MultiStak` leverages the robust design principles of the Balancer protocol but tailors them to suit the unique needs of the **Aptos** blockchain. Key components include:
 - **Token Pool**: Supports up to 5 different `LSTs`, allowing users to provide liquidity and earn fees.
 - **Swap Mechanism**: Facilitated by an AMM that dynamically adjusts token prices based on supply and demand.
 - **Liquidity Provision**: Users can add or remove liquidity from the pool, receiving pool tokens representing their share.
