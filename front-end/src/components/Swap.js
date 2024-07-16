@@ -11,6 +11,7 @@ import { useSendTransaction, useWaitForTransaction } from "wagmi";
 import { useWallet, InputTransactionData, InputViewFunctionData } from "@aptos-labs/wallet-adapter-react";
 import { aptos } from "../App.js";
 import { moduleAddress } from "../App.js";
+import { swap } from "../backend/Swap.js";
 
 
 function Swap(props) {
@@ -54,7 +55,7 @@ function Swap(props) {
     
     const payload = {
         function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-        functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, (Number(e.target.value) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
+        functionArguments: [account.address, 1, tokenOne.name, tokenOne.symbol, (Number(e.target.value) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
     };
 
     try {
@@ -108,39 +109,6 @@ function Swap(props) {
       setPrices(res.data)
   }
 
-  async function swap() {
-    if (!account) return;
-    setTransactionInProgress(true);
-    // parse tokenOneAmount to multiply 10^6
-
-    const payload = {
-      function: `${moduleAddress}::Multi_Token_Pool::get_swap_exact_amount_in`,
-      functionArguments: [account.address, 0, tokenOne.name, tokenOne.symbol, (Number(tokenOneAmount) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, 0, 1000000000000]
-    };
-    let result;
-    try {
-      result = (await aptos.view({ payload })); 
-    }
-    catch (error) {
-      console.log(error);
-      return;
-    }
-
-    const swap_transaction = {
-      data: {
-        function: `${moduleAddress}::Multi_Token_Pool::swap`,
-        functionArguments: [0, tokenOne.name, tokenOne.symbol, (Number(tokenOneAmount) * 1000000).toFixed(0), tokenTwo.name, tokenTwo.symbol, result[0]]
-      }
-    };
-    console.log(tokenTwo.name);
-    console.log(tokenTwo.symbol);
-
-    // sign and submit transaction to chain
-    const response = await signAndSubmitTransaction(swap_transaction);
-    // wait for transaction
-    await aptos.waitForTransaction({transactionHash:response.hash});
-    setTransactionInProgress(false);
-  }
 
   async function fetchDexSwap(){
 
@@ -289,7 +257,7 @@ function Swap(props) {
             <DownOutlined />
           </div>
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={swap}>Swap</div>
+        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={() => swap(account, tokenOne, tokenTwo, tokenOneAmount, signAndSubmitTransaction)}>Swap</div>
       </div>
     </>
   );

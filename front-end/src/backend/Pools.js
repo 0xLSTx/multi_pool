@@ -132,6 +132,7 @@ export async function getPools() {
                 weight: Number(list_weight[j]) / 10000
             });
         }
+        if (assets.length === 0) continue;
         pools.push({assets, pool_id: i});
     }
 
